@@ -112,7 +112,7 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     }
     int numPlayers = cards.size();
     for(int i = 0; i < numPlayers; i++) {
-        for(int j = 0; j < handSize; j++) {
+        for(int j = 0; j < (handSize / 2); j++) {
             deck.erase(cards[i][j]);
         }
     }
@@ -141,12 +141,13 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     float results[numPlayers];
     memset(results, 0.0, sizeof(float) * numPlayers);
 
-    std::vector<std::vector<int>> massFunctions(numPlayers,std::vector<int>(7464, 0));
+    std::vector<std::vector<int>> massFunctions(numPlayers,std::vector<int>(7463, 0));
 
     int maxRank;
     std::vector<int> maxIndexes;
     int indexSize;
     int rlength = result.size();
+
     for(int i = 0; i < rlength; i++) {
         maxIndexes.clear();
         maxRank = *std::max_element(result[i].begin(), result[i].end());
@@ -167,6 +168,20 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         equities.emplace_back(results[i] / (float)boards.size());
         std::cout << equities[i] << std::endl;
     }
+
+    //reslice array to contiguous sections 4824
+    std::vector<std::vector<int>> finalPmf;
+    std::cout << "taco" << std::endl;
+    for(int i = 0; i < numPlayers; i++) {
+        finalPmf.emplace_back(std::vector<int>());
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][49], massFunctions[i][1277]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][1296], massFunctions[i][4137]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][4141], massFunctions[i][4995]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5004], massFunctions[i][5853]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5854], massFunctions[i][5863]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5864], massFunctions[i][7140]);
+        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][7453], massFunctions[i][7462]);
+    }
     std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
-    return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, massFunctions);
+    return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
 }
