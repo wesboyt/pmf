@@ -75,12 +75,12 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         for(int i = 0; i < boardIndex; i += handSize + 1) {
             std::vector<u_int8_t> playerCards = {};
             for(int j = i; j < i + handSize; j += handSize) {
-                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[suitLookup[j+1]]);
+                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
             }
             cards.emplace_back(playerCards);
         }
-        for(int i = boardIndex; i < length; i+=2) {
-            board.emplace_back((cardLookup[input[i]] * 4) + suitLookup[suitLookup[i+1]]);
+        for(int i = boardIndex + 1; i < length; i+=2) {
+            board.emplace_back((cardLookup[input[i]] * 4) + suitLookup[input[i+1]]);
         }
     } else {
         for(int i = 0; i < length; i += handSize + 1) {
@@ -98,8 +98,8 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     for(int i = 0; i < 52; i++) {
         deck.insert(i);
     }
-    for(std::vector<uint8_t> tempHoles : cards){
-        for(int card : tempHoles){
+    for(std::vector<uint8_t> tempHoles : cards) {
+        for(int card : tempHoles) {
             deck.erase(card);
         }
     }
