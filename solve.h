@@ -153,7 +153,7 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::vector<s
     return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
 }
 
-std::pair<std::vector<float>, std::vector<std::vector<int>>> parseCards(std::string input) {
+std::pair<std::vector<std::vector<uint16_t>>, std::vector<uint16_t>> parseCards(std::string input) {
     std::map<char, uint16_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
     std::map<char, uint16_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
     std::vector<std::vector<uint16_t>> cards;
@@ -182,5 +182,5 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> parseCards(std::str
             cards.emplace_back(playerCards);
         }
     }
-    return solve(cards, board);
+    return std::pair<std::vector<std::vector<uint16_t>>, std::vector<uint16_t>>(cards, board);
 }

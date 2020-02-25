@@ -3,6 +3,7 @@
 //
 #include "solve.h"
 int main() {
-    std::pair<std::vector<float>, std::vector<std::vector<int>>> result = parseCards("KdQh,JsJd|AsTh9c");
+    auto cards = parseCards("KdQh,JsJd|AsTh9c");
+    std::pair<std::vector<float>, std::vector<std::vector<int>>> result = solve(cards.first, cards.second);
 }
 
