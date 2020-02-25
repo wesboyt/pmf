@@ -74,6 +74,7 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
 }
 
 std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     std::map<char, u_int8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
     std::map<char, u_int8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
     std::vector<std::vector<u_int8_t>> cards;
@@ -109,33 +110,34 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     for(int i = 0; i < 52; i++) {
         deck.insert(i);
     }
-    for(std::vector<uint8_t> tempHoles : cards) {
-        for(int card : tempHoles) {
-            deck.erase(card);
+    int numPlayers = cards.size();
+    for(int i = 0; i < numPlayers; i++) {
+        for(int j = 0; j < handSize; j++) {
+            deck.erase(cards[i][j]);
         }
     }
-    for( uint8_t bcard : board) {
-        std::cout << bcard << std::endl;
-        deck.erase(bcard);
+    int boardLength = board.size();
+    for(int i = 0; i < boardLength; i++) {
+        deck.erase(board[i]);
     }
 
     std::vector<std::vector<int>> result;
     std::vector<uint8_t> taco;
     taco.insert(taco.end(), deck.begin(), deck.end());
-    std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - board.size()));
+    std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - boardLength));
 
-    if(board.size() > 0) {
-        int length = boards.size();
-        for(int i = 0; i < length; i++) {
+    int boardsLength = boards.size();
+    if(boardLength > 0) {
+        for(int i = 0; i < boardsLength; i++) {
             boards[i].insert(boards[i].end(), board.begin(), board.end());
         }
     }
 
-    for(std::vector<uint8_t> tempBoard : boards) {
-        result.emplace_back(getRanks(cards, tempBoard));
+    for(int i = 0; i < boardsLength; i++) {
+        result.emplace_back(getRanks(cards, boards[i]));
     }
 
-    int numPlayers = cards.size();
+
     float results[numPlayers];
     memset(results, 0.0, sizeof(float) * numPlayers);
 
@@ -144,14 +146,14 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     int maxRank;
     std::vector<int> maxIndexes;
     int indexSize;
-
-    for(std::vector<int> ranks : result) {
+    int rlength = result.size();
+    for(int i = 0; i < rlength; i++) {
         maxIndexes.clear();
-        maxRank = *std::max_element(ranks.begin(), ranks.end());
-        for(int i = 0; i < numPlayers; i++) {
-            massFunctions[i][ranks[i]] += 1;
-            if(ranks[i] == maxRank) {
-                maxIndexes.emplace_back(i);
+        maxRank = *std::max_element(result[i].begin(), result[i].end());
+        for(int j = 0; j < numPlayers; j++) {
+            massFunctions[j][result[i][j]] += 1;
+            if(result[i][j] == maxRank) {
+                maxIndexes.emplace_back(j);
             }
         }
 
@@ -165,5 +167,6 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         equities.emplace_back(results[i] / (float)boards.size());
         std::cout << equities[i] << std::endl;
     }
+    std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
     return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, massFunctions);
 }
