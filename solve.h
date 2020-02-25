@@ -114,19 +114,20 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
             deck.erase(card);
         }
     }
+    for( uint8_t bcard : board) {
+        std::cout << bcard << std::endl;
+        deck.erase(bcard);
+    }
 
     std::vector<std::vector<int>> result;
-    //uint8_t taco[deck.size()];
     std::vector<uint8_t> taco;
     taco.insert(taco.end(), deck.begin(), deck.end());
-    //std::copy(deck.begin(), deck.end(), taco);
-    const int size = deck.size();
     std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - board.size()));
-    //std::vector<std::vector<uint8_t>> boards = for_each_combination(taco, taco + (5 - board.size()), taco + deck.size(), boardSet()).result;
 
     if(board.size() > 0) {
-        for(std::vector<uint8_t> tempBoard : boards) {
-            tempBoard.insert(tempBoard.end(), board.begin(), board.end());
+        int length = boards.size();
+        for(int i = 0; i < length; i++) {
+            boards[i].insert(boards[i].end(), board.begin(), board.end());
         }
     }
 
