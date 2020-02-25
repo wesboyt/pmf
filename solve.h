@@ -74,7 +74,6 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
 }
 
 std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     std::map<char, u_int8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
     std::map<char, u_int8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
     std::vector<std::vector<u_int8_t>> cards;
@@ -165,6 +164,5 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         equities.emplace_back(results[i] / (float)boards.size());
         std::cout << equities[i] << std::endl;
     }
-    std::cout << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << std::endl;
     return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, massFunctions);
 }
