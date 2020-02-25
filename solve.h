@@ -174,13 +174,11 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     std::cout << "taco" << std::endl;
     for(int i = 0; i < numPlayers; i++) {
         finalPmf.emplace_back(std::vector<int>());
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][49], massFunctions[i][1277]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][1296], massFunctions[i][4137]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][4141], massFunctions[i][4995]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5004], massFunctions[i][5853]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5854], massFunctions[i][5863]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][5864], massFunctions[i][7140]);
-        finalPmf[i].insert(finalPmf[i].end(), massFunctions[i][7453], massFunctions[i][7462]);
+        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][49], &massFunctions[i][1277]);
+        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][1296], &massFunctions[i][4137]);
+        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][4141], &massFunctions[i][4995]);
+        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][5004], &massFunctions[i][7140]);
+        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][7453], &massFunctions[i][7462]);
     }
     std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
     return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
