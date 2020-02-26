@@ -17,63 +17,6 @@
 
 #endif //PMF_SOLVE_H
 
-std::vector<std::vector<uint8_t>> combinations(std::vector<uint8_t> src, int r) {
-    std::vector<std::vector<uint8_t>> cs;
-    if (r == 1) {
-        for (auto i = 0; i < src.size(); i++) {
-            std::vector<uint8_t> c;
-            c.push_back(src[i]);
-            cs.push_back(c);
-        }
-        return cs;
-    }
-    int* places = (int*)malloc(sizeof(int) * r);
-    for (auto i = 0; i < r; i++) places[i] = i;
-    while (true) {
-        // push_back another combination
-        std::vector<uint8_t> c; c.reserve(r);
-        for (auto i = 0; i < r; i++) {
-            c.push_back(src[places[i]]);
-        }
-        cs.push_back(c);
-        // update places
-        for (auto i = 0; i < r-1; i++) {
-            places[i]++;
-            if (places[i+1] == places[i]) {
-                places[i] = i;
-                if (i == r-2) places[r-1]++;
-                continue;
-            }
-            break;
-        }
-        if (places[r-1] == src.size()) break;
-    }
-    free(places);
-    return cs;
-}
-
-
-std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<uint8_t> board) {
-    std::vector<int> result;
-    int numPlayers = cards.size();
-    int handSize = cards[0].size();
-    int tempMax, playerMax;
-    for(int i = 0; i < numPlayers; i++) {
-        playerMax = 0;
-        for(int j = 0; j < handSize - 1; j++) {
-            for(int k = j + 1; k < handSize; k++) {
-                tempMax = SevenEval::GetRank(board[0], board[1], board[2], board[3], board[4], cards[i][j], cards[i][k]);
-                if(tempMax > playerMax) {
-                    playerMax = tempMax;
-                }
-            }
-
-        }
-        result.emplace_back(playerMax);
-    }
-    return result;
-}
-
 std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     std::map<char, u_int8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
@@ -123,9 +66,41 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     }
 
     std::vector<std::vector<int>> result;
-    std::vector<uint8_t> taco;
-    taco.insert(taco.end(), deck.begin(), deck.end());
-    std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - boardLength));
+    std::vector<uint8_t> src;
+    src.insert(src.end(), deck.begin(), deck.end());
+    //combinations
+    std::vector<std::vector<uint8_t>> boards;
+    int r = 5 - board.size();
+    if (r == 1) {
+        for (auto i = 0; i < src.size(); i++) {
+            std::vector<uint8_t> c;
+            c.push_back(src[i]);
+            boards.push_back(c);
+        }
+    } else {
+        int* places = (int*)malloc(sizeof(int) * r);
+        for (auto i = 0; i < r; i++) places[i] = i;
+        while (true) {
+            // push_back another combination
+            std::vector<uint8_t> c; c.reserve(r);
+            for (auto i = 0; i < r; i++) {
+                c.push_back(src[places[i]]);
+            }
+            boards.push_back(c);
+            // update places
+            for (auto i = 0; i < r-1; i++) {
+                places[i]++;
+                if (places[i+1] == places[i]) {
+                    places[i] = i;
+                    if (i == r-2) places[r-1]++;
+                    continue;
+                }
+                break;
+            }
+            if (places[r-1] == src.size()) break;
+        }
+        free(places);
+    }
 
     int boardsLength = boards.size();
     if(boardLength > 0) {
@@ -134,8 +109,24 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         }
     }
 
+    std::vector<int> tempRanks;
+    int tempMax, playerMax;
     for(int i = 0; i < boardsLength; i++) {
-        result.emplace_back(getRanks(cards, boards[i]));
+        tempRanks = std::vector<int>();
+        for(int j = 0; j < numPlayers; j++) {
+            playerMax = 0;
+            for(int k = 0; k < handSize/2 - 1; k++) {
+                for(int l = k + 1; l < handSize/2; l++) {
+                    tempMax = SevenEval::GetRank(boards[i][0], boards[i][1], boards[i][2], boards[i][3], boards[i][4], cards[j][k], cards[j][l]);
+                    if(tempMax > playerMax) {
+                        playerMax = tempMax;
+                    }
+                }
+
+            }
+            tempRanks.emplace_back(playerMax);
+        }
+        result.emplace_back(tempRanks);
     }
 
 
