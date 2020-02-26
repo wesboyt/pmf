@@ -76,17 +76,17 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
 
 std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-    std::map<char, u_int8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
-    std::map<char, u_int8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
-    std::vector<std::vector<u_int8_t>> cards;
+    std::map<char, uint8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
+    std::map<char, uint8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
+    std::vector<std::vector<uint8_t>> cards;
     int boardIndex = input.find_first_of('|');
     int handSize = input.find_first_of(',');
     int length = input.length();
 
-    std::vector<u_int8_t> board = {};
+    std::vector<uint8_t> board = {};
     if(boardIndex != std::string::npos) {
         for(int i = 0; i < boardIndex; i += handSize + 1) {
-            std::vector<u_int8_t> playerCards = {};
+            std::vector<uint8_t> playerCards = {};
             for(int j = i; j < i + handSize; j += 2) {
                 playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
             }
@@ -97,7 +97,7 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         }
     } else {
         for(int i = 0; i < length; i += handSize + 1) {
-            std::vector<u_int8_t> playerCards = {};
+            std::vector<uint8_t> playerCards = {};
             for(int j = i; j < i + handSize; j += 2) {
                 playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
             }
@@ -106,8 +106,6 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     }
 
     std::set<uint8_t> deck = {};
-
-    //code
     for(int i = 0; i < 52; i++) {
         deck.insert(i);
     }
@@ -138,10 +136,8 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
         result.emplace_back(getRanks(cards, boards[i]));
     }
 
-
     float results[numPlayers];
     memset(results, 0.0, sizeof(float) * numPlayers);
-
     std::vector<std::vector<int>> massFunctions(numPlayers,std::vector<int>(7463, 0));
 
     int maxRank;
