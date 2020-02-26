@@ -1,3 +1,4 @@
+
 //
 // Created by wes on 2/22/20.
 //
@@ -16,11 +17,11 @@
 
 #endif //PMF_SOLVE_H
 
-std::vector<std::vector<uint16_t>> combinations(std::vector<uint16_t> src, int r) {
-    std::vector<std::vector<uint16_t>> cs;
+std::vector<std::vector<uint8_t>> combinations(std::vector<uint8_t> src, int r) {
+    std::vector<std::vector<uint8_t>> cs;
     if (r == 1) {
         for (auto i = 0; i < src.size(); i++) {
-            std::vector<uint16_t> c;
+            std::vector<uint8_t> c;
             c.push_back(src[i]);
             cs.push_back(c);
         }
@@ -30,7 +31,7 @@ std::vector<std::vector<uint16_t>> combinations(std::vector<uint16_t> src, int r
     for (auto i = 0; i < r; i++) places[i] = i;
     while (true) {
         // push_back another combination
-        std::vector<uint16_t> c; c.reserve(r);
+        std::vector<uint8_t> c; c.reserve(r);
         for (auto i = 0; i < r; i++) {
             c.push_back(src[places[i]]);
         }
@@ -52,7 +53,7 @@ std::vector<std::vector<uint16_t>> combinations(std::vector<uint16_t> src, int r
 }
 
 
-std::vector<int> getRanks(std::vector<std::vector<uint16_t>> cards, std::vector<uint16_t> board) {
+std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<uint8_t> board) {
     std::vector<int> result;
     int numPlayers = cards.size();
     int handSize = cards[0].size();
@@ -73,10 +74,39 @@ std::vector<int> getRanks(std::vector<std::vector<uint16_t>> cards, std::vector<
     return result;
 }
 
-std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::vector<std::vector<uint16_t>> cards, std::vector<uint16_t> board) {
+std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-    std::set<uint16_t> deck = {};
-    int handSize = cards[0].size();
+    std::map<char, u_int8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
+    std::map<char, u_int8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
+    std::vector<std::vector<u_int8_t>> cards;
+    int boardIndex = input.find_first_of('|');
+    int handSize = input.find_first_of(',');
+    int length = input.length();
+
+    std::vector<u_int8_t> board = {};
+    if(boardIndex != std::string::npos) {
+        for(int i = 0; i < boardIndex; i += handSize + 1) {
+            std::vector<u_int8_t> playerCards = {};
+            for(int j = i; j < i + handSize; j += 2) {
+                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
+            }
+            cards.emplace_back(playerCards);
+        }
+        for(int i = boardIndex + 1; i < length; i+=2) {
+            board.emplace_back((cardLookup[input[i]] * 4) + suitLookup[input[i+1]]);
+        }
+    } else {
+        for(int i = 0; i < length; i += handSize + 1) {
+            std::vector<u_int8_t> playerCards = {};
+            for(int j = i; j < i + handSize; j += 2) {
+                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
+            }
+            cards.emplace_back(playerCards);
+        }
+    }
+
+    std::set<uint8_t> deck = {};
+
     //code
     for(int i = 0; i < 52; i++) {
         deck.insert(i);
@@ -93,9 +123,9 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::vector<s
     }
 
     std::vector<std::vector<int>> result;
-    std::vector<uint16_t> taco;
+    std::vector<uint8_t> taco;
     taco.insert(taco.end(), deck.begin(), deck.end());
-    std::vector<std::vector<uint16_t>> boards = combinations(taco, (5 - boardLength));
+    std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - boardLength));
 
     int boardsLength = boards.size();
     if(boardLength > 0) {
@@ -104,12 +134,14 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::vector<s
         }
     }
 
-    for(std::vector<std::vector<uint16_t>>::iterator it = boards.begin(); it != boards.end(); ++it) {
-        result.emplace_back(getRanks(cards, *it));
+    for(int i = 0; i < boardsLength; i++) {
+        result.emplace_back(getRanks(cards, boards[i]));
     }
+
 
     float results[numPlayers];
     memset(results, 0.0, sizeof(float) * numPlayers);
+
     std::vector<std::vector<int>> massFunctions(numPlayers,std::vector<int>(7463, 0));
 
     int maxRank;
@@ -148,39 +180,6 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::vector<s
         finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][5004], &massFunctions[i][7140]);
         finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][7453], &massFunctions[i][7462]);
     }
-
     std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
     return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
-}
-
-std::pair<std::vector<std::vector<uint16_t>>, std::vector<uint16_t>> parseCards(std::string input) {
-    std::map<char, uint16_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
-    std::map<char, uint16_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
-    std::vector<std::vector<uint16_t>> cards;
-    int boardIndex = input.find_first_of('|');
-    int handSize = input.find_first_of(',');
-    int length = input.length();
-
-    std::vector<uint16_t> board = {};
-    if(boardIndex != std::string::npos) {
-        for(int i = 0; i < boardIndex - 1; i += handSize + 1) {
-            std::vector<uint16_t> playerCards = {};
-            for(int j = i; j < i + handSize; j += 2) {
-                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
-            }
-            cards.emplace_back(playerCards);
-        }
-        for(int i = boardIndex + 1; i < length; i+=2) {
-            board.emplace_back((cardLookup[input[i]] * 4) + suitLookup[input[i+1]]);
-        }
-    } else {
-        for(int i = 0; i < length; i += handSize + 1) {
-            std::vector<uint16_t> playerCards = {};
-            for(int j = i; j < i + handSize; j += 2) {
-                playerCards.emplace_back(cardLookup[input[j]] * 4 + suitLookup[input[j+1]]);
-            }
-            cards.emplace_back(playerCards);
-        }
-    }
-    return std::pair<std::vector<std::vector<uint16_t>>, std::vector<uint16_t>>(cards, board);
 }
