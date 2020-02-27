@@ -11,11 +11,19 @@
 #include <algorithm>
 #include <set>
 #include "SKPokerEval/src/SevenEval.h"
+#include "FiveEval.h"
 
 #ifndef PMF_SOLVE_H
 #define PMF_SOLVE_H
 
 #endif //PMF_SOLVE_H
+FiveEval init_eval()
+{
+    return FiveEval();
+}
+
+extern FiveEval eval = init_eval();
+
 
 std::vector<std::vector<uint8_t>> combinations(std::vector<uint8_t> src, int r) {
     std::vector<std::vector<uint8_t>> cs;
@@ -58,23 +66,43 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
     int numPlayers = cards.size();
     int handSize = cards[0].size();
     int tempMax, playerMax;
-    for(int i = 0; i < numPlayers; i++) {
-        playerMax = 0;
-        for(int j = 0; j < handSize - 1; j++) {
-            for(int k = j + 1; k < handSize; k++) {
-                tempMax = SevenEval::GetRank(board[0], board[1], board[2], board[3], board[4], cards[i][j], cards[i][k]);
-                if(tempMax > playerMax) {
-                    playerMax = tempMax;
+    if(handSize == 2) {
+        for(int i = 0; i < numPlayers; i++) {
+            playerMax = 0;
+            for(int j = 0; j < 1; j++) {
+                for(int k = j + 1; k < 2; k++) {
+                    tempMax = SevenEval::GetRank(board[0], board[1], board[2], board[3], board[4], cards[i][j], cards[i][k]);
+                    if(tempMax > playerMax) {
+                        playerMax = tempMax;
+                    }
                 }
             }
-
+            result.emplace_back(playerMax);
         }
-        result.emplace_back(playerMax);
+    } else if(handSize == 4) {
+        std::vector<std::vector<uint8_t>> bCombos = combinations(board, 3);
+        int comboLength = bCombos.size();
+        for(int i = 0; i < numPlayers; i++) {
+            playerMax = 0;
+            for(int j = 0; j < comboLength; j++) {
+                for (int k = 0; k < handSize - 1; k++) {
+                    for (int l = k + 1; l < handSize; l++) {
+                        tempMax = eval.GetRank(bCombos[j][0], bCombos[j][1], bCombos[j][2], cards[i][k], cards[i][l]);
+                        if(tempMax > playerMax) {
+                            playerMax = tempMax;
+                        }
+                    }
+                }
+            }
+            result.emplace_back(playerMax);
+        }
     }
+
     return result;
 }
 
 std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
+
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     std::map<char, uint8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
     std::map<char, uint8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
