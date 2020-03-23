@@ -12,7 +12,7 @@
 #include <set>
 #include "SKPokerEval/src/SevenEval.h"
 #include "FiveEval.h"
-#include "combinations.h"
+#include "combinations/combinations.h"
 
 #ifndef PMF_SOLVE_H
 #define PMF_SOLVE_H
