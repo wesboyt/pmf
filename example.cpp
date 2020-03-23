@@ -1,7 +1,7 @@
 //
 // Created by wes on 2/23/20.
 //
-#include "solve1.h"
+#include "solve.h"
 int main() {
     std::pair<std::vector<float>, std::vector<std::vector<int>>> result = solve("AsQh,Ac8s");
     for(float ev : result.first) {

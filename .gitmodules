@@ -1,3 +1,6 @@
 [submodule "SKPokerEval"]
 	path = SKPokerEval
 	url = https://github.com/kennethshackleton/SKPokerEval.git
+[submodule "combinations"]
+	path = combinations
+	url = https://github.com/HowardHinnant/combinations.git
