@@ -12,6 +12,7 @@
 #include <set>
 #include "SKPokerEval/src/SevenEval.h"
 #include "FiveEval.h"
+#include "combinations.h"
 
 #ifndef PMF_SOLVE_H
 #define PMF_SOLVE_H
@@ -25,7 +26,8 @@ FiveEval init_eval()
 extern FiveEval eval = init_eval();
 
 
-std::vector<std::vector<uint8_t>> combinations(std::vector<uint8_t> src, int r) {
+
+std::vector<std::vector<uint8_t>> combination(std::vector<uint8_t> src, int r) {
     std::vector<std::vector<uint8_t>> cs;
     if (r == 1) {
         for (auto i = 0; i < src.size(); i++) {
@@ -80,7 +82,7 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
             result.emplace_back(playerMax);
         }
     } else if(handSize == 4) {
-        std::vector<std::vector<uint8_t>> bCombos = combinations(board, 3);
+        std::vector<std::vector<uint8_t>> bCombos = combination(board, 3);
         int comboLength = bCombos.size();
         for(int i = 0; i < numPlayers; i++) {
             playerMax = 0;
@@ -96,22 +98,114 @@ std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<u
             }
             result.emplace_back(playerMax);
         }
+    } else {
+        throw std::invalid_argument( "invalid number of cards" );
     }
 
     return result;
 }
 
-std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
+struct result {
+    int numPlayers, boardCount;
+    std::vector<float> results;
+    std::vector<uint8_t> board;
+    std::vector<std::vector<uint8_t>> cards;
+    std::vector<std::vector<int>> massFunctions;
+    result(int inNumPlayers, std::vector<std::vector<uint8_t>> inCards, std::vector<uint8_t> inBoard) {
+        numPlayers = inNumPlayers;
+        boardCount = 0;
+        results = std::vector<float>(numPlayers);
+        board = inBoard;
+        cards = inCards;
+        massFunctions = std::vector<std::vector<int>>(numPlayers, std::vector<int>(7463, 0));
+    }
 
+    bool operator()(uint8_t * first, uint8_t* last) {
+        boardCount++;
+        std::vector<uint8_t> combo = std::vector<uint8_t>(first, last);
+        if (board.size() > 0) {
+            combo.insert(combo.end(), board.begin(), board.end());
+        }
+        std::vector<int> ranks = getRanks(cards, combo);
+        int maxRank = 0, maxCount;
+        for (int i = 0; i < numPlayers; i++) {
+            massFunctions[i][ranks[i]] += 1;
+            if (ranks[i] >= maxRank) {
+                if (ranks[i] == maxRank) {
+                    maxCount++;
+                } else {
+                    maxRank = ranks[i];
+                    maxCount = 1;
+                }
+
+            }
+        }
+        float addition = (1.0 / (float) maxCount);
+        for (int i = 0; i < numPlayers; i++) {
+            if (ranks[i] == maxRank) {
+                results[i] += addition;
+            }
+        }
+        return false;
+    }
+};
+
+
+std::pair<std::vector<float>, std::vector<std::vector<int>>> buildPmf(std::vector<std::vector<uint8_t>> cards, std::vector<uint8_t> board, std::vector<uint8_t> removed) {
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+    std::set<uint8_t> deck = {};
+    for(int i = 0; i < 52; i++) {
+        deck.insert(i);
+    }
+
+    int numPlayers = cards.size();
+    for(int i = 0; i < numPlayers; i++) {
+        for(int j = 0; j < (cards[0].size()); j++) {
+            deck.erase(cards[i][j]);
+        }
+    }
+
+    int boardLength = board.size();
+    for(int i = 0; i < boardLength; i++) {
+        deck.erase(board[i]);
+    }
+
+    uint8_t taco[deck.size()];
+    std::copy(deck.begin(), deck.end(), taco);
+    int N = 5 - boardLength;
+    struct result results = for_each_combination(taco, taco + N, taco + deck.size(), result(numPlayers, cards, board));
+    std::vector<float> equities;
+    std::cout << results.boardCount << std::endl;
+    for(int i = 0; i < numPlayers; i++) {
+        equities.emplace_back(results.results[i] / (float)results.boardCount);
+    }
+
+    //reslice array to contiguous sections 4824
+    std::vector<std::vector<int>> finalPmf;
+    for(int i = 0; i < numPlayers; i++) {
+        finalPmf.emplace_back(std::vector<int>());
+        finalPmf[i].insert(finalPmf[i].end(), &results.massFunctions[i][49], &results.massFunctions[i][1277]);
+        finalPmf[i].insert(finalPmf[i].end(), &results.massFunctions[i][1296], &results.massFunctions[i][4137]);
+        finalPmf[i].insert(finalPmf[i].end(), &results.massFunctions[i][4141], &results.massFunctions[i][4995]);
+        finalPmf[i].insert(finalPmf[i].end(), &results.massFunctions[i][5004], &results.massFunctions[i][7140]);
+        finalPmf[i].insert(finalPmf[i].end(), &results.massFunctions[i][7453], &results.massFunctions[i][7462]);
+    }
+    std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
+    return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
+}
+
+std::tuple<std::vector<std::vector<uint8_t>>, std::vector<uint8_t>, std::vector<uint8_t>> parseCards(std::string input) {
     std::map<char, uint8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
     std::map<char, uint8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
     std::vector<std::vector<uint8_t>> cards;
     int boardIndex = input.find_first_of('|');
     int handSize = input.find_first_of(',');
+    int removedIndex = input.find_first_of(':');
     int length = input.length();
-
+    std::vector<uint8_t> removed = {};
     std::vector<uint8_t> board = {};
+
     if(boardIndex != std::string::npos) {
         for(int i = 0; i < boardIndex; i += handSize + 1) {
             std::vector<uint8_t> playerCards = {};
@@ -132,78 +226,10 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
             cards.emplace_back(playerCards);
         }
     }
+    return std::tuple(cards, board, removed);
+}
 
-    std::set<uint8_t> deck = {};
-    for(int i = 0; i < 52; i++) {
-        deck.insert(i);
-    }
-    int numPlayers = cards.size();
-    for(int i = 0; i < numPlayers; i++) {
-        for(int j = 0; j < (handSize / 2); j++) {
-            deck.erase(cards[i][j]);
-        }
-    }
-    int boardLength = board.size();
-    for(int i = 0; i < boardLength; i++) {
-        deck.erase(board[i]);
-    }
-
-    std::vector<std::vector<int>> result;
-    std::vector<uint8_t> taco;
-    taco.insert(taco.end(), deck.begin(), deck.end());
-    std::vector<std::vector<uint8_t>> boards = combinations(taco, (5 - boardLength));
-
-    int boardsLength = boards.size();
-    if(boardLength > 0) {
-        for(int i = 0; i < boardsLength; i++) {
-            boards[i].insert(boards[i].end(), board.begin(), board.end());
-        }
-    }
-
-    for(int i = 0; i < boardsLength; i++) {
-        result.emplace_back(getRanks(cards, boards[i]));
-    }
-
-    float results[numPlayers];
-    memset(results, 0.0, sizeof(float) * numPlayers);
-    std::vector<std::vector<int>> massFunctions(numPlayers,std::vector<int>(7463, 0));
-
-    int maxRank;
-    std::vector<int> maxIndexes;
-    int indexSize;
-    int rlength = result.size();
-
-    for(int i = 0; i < rlength; i++) {
-        maxIndexes.clear();
-        maxRank = *std::max_element(result[i].begin(), result[i].end());
-        for(int j = 0; j < numPlayers; j++) {
-            massFunctions[j][result[i][j]] += 1;
-            if(result[i][j] == maxRank) {
-                maxIndexes.emplace_back(j);
-            }
-        }
-
-        indexSize = maxIndexes.size();
-        for (int i = 0; i < indexSize; i++) {
-            results[maxIndexes[i]] += (1.0 / (float) indexSize);
-        }
-    }
-    std::vector<float> equities;
-    for(int i = 0; i < numPlayers; i++) {
-        equities.emplace_back(results[i] / (float)boards.size());
-        std::cout << equities[i] << std::endl;
-    }
-
-    //reslice array to contiguous sections 4824
-    std::vector<std::vector<int>> finalPmf;
-    for(int i = 0; i < numPlayers; i++) {
-        finalPmf.emplace_back(std::vector<int>());
-        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][49], &massFunctions[i][1277]);
-        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][1296], &massFunctions[i][4137]);
-        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][4141], &massFunctions[i][4995]);
-        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][5004], &massFunctions[i][7140]);
-        finalPmf[i].insert(finalPmf[i].end(), &massFunctions[i][7453], &massFunctions[i][7462]);
-    }
-    std::cout << "It took me " << (std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t1).count()) << " seconds."  << std::endl;
-    return std::pair<std::vector<float>, std::vector<std::vector<int>>>(equities, finalPmf);
+std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string input) {
+    std::tuple<std::vector<std::vector<uint8_t>>, std::vector<uint8_t>, std::vector<uint8_t>> gameState = parseCards(input);
+    return buildPmf(std::get<0>(gameState), std::get<1>(gameState), std::get<2>(gameState));
 }
