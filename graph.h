@@ -14,7 +14,17 @@ struct Node {
     Node* source;
     std::vector<float> likelihoods;
     std::vector<Node> children;
+    Node(Node* mySource) {
+        source = mySource;
+    }
+    Node(){
+
+    }
 };
+
+void generateNodes() {
+
+}
 
 
 
