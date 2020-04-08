@@ -9,18 +9,32 @@
 
 #endif //PMF_GRAPH_H
 
-struct Node {
-    int size;
+class Node {
+
+
+
+public:
     Node* source;
     std::vector<float> likelihoods;
     std::vector<Node> children;
+    Node() {
+
+    }
+
     Node(Node* mySource) {
         source = mySource;
     }
-    Node(){
-
-    }
 };
+
+class rover {
+    Node source;
+    rover() {
+        source = Node();
+    }
+
+
+
+}
 
 void generateNodes() {
 
