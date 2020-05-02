@@ -13,6 +13,7 @@
 #include "SKPokerEval/src/SevenEval.h"
 #include "FiveEval.h"
 #include "combinations/combinations.h"
+#include "combination.h"
 
 #ifndef PMF_SOLVE_H
 #define PMF_SOLVE_H
@@ -24,43 +25,6 @@ FiveEval init_eval()
 }
 
 extern FiveEval eval = init_eval();
-
-
-
-std::vector<std::vector<uint8_t>> combination(std::vector<uint8_t> src, int r) {
-    std::vector<std::vector<uint8_t>> cs;
-    if (r == 1) {
-        for (auto i = 0; i < src.size(); i++) {
-            std::vector<uint8_t> c;
-            c.push_back(src[i]);
-            cs.push_back(c);
-        }
-        return cs;
-    }
-    int* places = (int*)malloc(sizeof(int) * r);
-    for (auto i = 0; i < r; i++) places[i] = i;
-    while (true) {
-        // push_back another combination
-        std::vector<uint8_t> c; c.reserve(r);
-        for (auto i = 0; i < r; i++) {
-            c.push_back(src[places[i]]);
-        }
-        cs.push_back(c);
-        // update places
-        for (auto i = 0; i < r-1; i++) {
-            places[i]++;
-            if (places[i+1] == places[i]) {
-                places[i] = i;
-                if (i == r-2) places[r-1]++;
-                continue;
-            }
-            break;
-        }
-        if (places[r-1] == src.size()) break;
-    }
-    free(places);
-    return cs;
-}
 
 
 std::vector<int> getRanks(std::vector<std::vector<uint8_t>> cards, std::vector<uint8_t> board) {
@@ -111,6 +75,7 @@ struct result {
     std::vector<uint8_t> board;
     std::vector<std::vector<uint8_t>> cards;
     std::vector<std::vector<int>> massFunctions;
+
     result(int inNumPlayers, std::vector<std::vector<uint8_t>> inCards, std::vector<uint8_t> inBoard) {
         numPlayers = inNumPlayers;
         boardCount = 0;
@@ -176,7 +141,6 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> buildPmf(std::vecto
     int N = 5 - boardLength;
     struct result results = for_each_combination(taco, taco + N, taco + deck.size(), result(numPlayers, cards, board));
     std::vector<float> equities;
-    std::cout << results.boardCount << std::endl;
     for(int i = 0; i < numPlayers; i++) {
         equities.emplace_back(results.results[i] / (float)results.boardCount);
     }
@@ -196,8 +160,8 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> buildPmf(std::vecto
 }
 
 std::tuple<std::vector<std::vector<uint8_t>>, std::vector<uint8_t>, std::vector<uint8_t>> parseCards(std::string input) {
-    std::map<char, uint8_t> suitLookup = {{'s', 0}, {'h', 1}, {'d', 2}, {'c', 3}};
-    std::map<char, uint8_t> cardLookup = {{'A', 0}, {'K', 1}, {'Q', 2}, {'J', 3}, {'T', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
+    std::map<char, uint8_t> suitLookup = {{'s', 0}, {'S', 0}, {'h', 1}, {'H', 1}, {'d', 2}, {'D', 2}, {'c', 3}, {'C', 3}};
+    std::map<char, uint8_t> cardLookup = {{'A', 0}, {'a', 0}, {'K', 1}, {'k', 1}, {'Q', 2}, {'q', 2}, {'J', 3}, {'j', 3}, {'T', 4}, {'t', 4}, {'9',5}, {'8',6}, {'7',7}, {'6',8}, {'5',9}, {'4',10}, {'3',11}, {'2',12}};
     std::vector<std::vector<uint8_t>> cards;
     int boardIndex = input.find_first_of('|');
     int handSize = input.find_first_of(',');
@@ -233,3 +197,5 @@ std::pair<std::vector<float>, std::vector<std::vector<int>>> solve(std::string i
     std::tuple<std::vector<std::vector<uint8_t>>, std::vector<uint8_t>, std::vector<uint8_t>> gameState = parseCards(input);
     return buildPmf(std::get<0>(gameState), std::get<1>(gameState), std::get<2>(gameState));
 }
+
+//for each combo of hole cards, remove them from the deck and iterate over all other combos of combos
