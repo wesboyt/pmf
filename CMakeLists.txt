@@ -1,7 +1,5 @@
-project(pmf)               # Create project "simple_example"
-set(CMAKE_CXX_STANDARD 17)            # Enable c++14 standard
-
-# Add main.cpp file of project root directory as source file
+project(pmf)
+set(CMAKE_CXX_STANDARD 17)
 set(SOURCE_FILES example.cpp FiveEval.cpp)
 set(CMAKE_CXX_FLAGS "-O3")
 
