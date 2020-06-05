@@ -3,18 +3,14 @@
 //
 #include "solve.h"
 int main() {
-    std::pair<std::vector<float>, std::vector<std::vector<int>>> result = solve("AsQh,Ac8s");
+    //dist();
+    std::pair<std::vector<float>, std::vector<std::vector<int>>> result = solve("3s4hAdAh,4d9c9h4c");
     for(float ev : result.first) {
         std::cout << ev << std::endl;
     }
-    //std::set<uint8_t> deck = {};
-    //std::vector<uint8_t> test;
-    //for(int i = 0; i < 50; i++) {
-    //    deck.insert(i);
-    //}
-    //auto combos = combinations(test, 2);
-
-
-    //std::cout << combos.size() << std::endl;
+    result = solve("3s4h,4d9c");
+    for(float ev : result.first) {
+        std::cout << ev << std::endl;
+    }
 }
 
